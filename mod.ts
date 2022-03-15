@@ -13,12 +13,17 @@ export type serveConfig = {
     pages: Record<string, string>
     /** default is `templates` */
     templateRoot?: string
+    /** if a nested page wasn't found nested try use a compatible one in the root folder */
+    preventTemplateRootFallback?: boolean
+    outDir?: string
     assets?: Record<string, string>,
     noHtmlEntries?: Record<string, string>
     extraLoaders?: Record<string, Loader>
 }
 
-export async function serve({ port, pages, noHtmlEntries, extraLoaders, templateRoot, assets }: serveConfig) {
+export async function serve({ port, pages, noHtmlEntries, extraLoaders, templateRoot, outDir, assets, preventTemplateRootFallback }: serveConfig) {
+    const template = templateRoot ?? "templates";
+    const outdir = outDir ?? "dist";
     const config: BuildOptions = {
         metafile: true,
         loader: {
@@ -34,18 +39,25 @@ export async function serve({ port, pages, noHtmlEntries, extraLoaders, template
                 name: "statpoints",
                 setup(build) {
                     build.onStart(() => {
-                        emptyDirSync("dist");
+                        emptyDirSync(outdir);
                         if (assets)
                             for (const [ publicPath, privatePath ] of Object.entries(assets)) {
-                                const publicPathFolder = publicPath.split("/").filter((_, i, l) => i != l.length - 1).join("/")
-                                ensureNestedFolderExists(publicPathFolder, templateRoot);
-                                copySync(privatePath, `dist/${publicPath}`);
+                                ensureNestedFolderExists(publicPath, outdir);
+                                copySync(privatePath, `${outdir}/${publicPath}`);
                             }
                         for (const id of Object.keys(pages)) {
                             if (id.endsWith("/")) throw new Error(`${id} is not allowed to end with a slash`);
-                            const idFolder = id.split("/").filter((_, i, l) => i != l.length - 1).join("/")
-                            ensureNestedFolderExists(idFolder, templateRoot);
-                            copySync(`${templateRoot}/${id}.html`, `dist/${id}.html`);
+                            ensureNestedFolderExists(id, outdir);
+                            try {
+                                copySync(`${template}/${id}.html`, `${outdir}/${id}.html`);
+                            } catch {
+                                const fallbackName = id.split("/").at(-1);
+                                if (!preventTemplateRootFallback)
+                                    copySync(`${template}/${fallbackName}.html`, `${outdir}/${id}.html`);
+                                else
+                                    console.error(`🥲  Couldn't find template for ${id}`)
+
+                            }
                         }
                     })
                 }
@@ -55,7 +67,7 @@ export async function serve({ port, pages, noHtmlEntries, extraLoaders, template
             ...pages,
             ...noHtmlEntries
         },
-        outdir: "dist/",
+        outdir: outdir + "/",
         minify: true,
         splitting: true,
         format: "esm",
@@ -67,7 +79,7 @@ export async function serve({ port, pages, noHtmlEntries, extraLoaders, template
         await build({
             ...config, minify: false, splitting: false,
             banner: {
-                js: `const refreshWs = new WebSocket(location.origin.replace("https", "wss").replace("http", "ws") + "/websocket-update"); refreshWs.onmessage = () => location.href = location.href;`
+                js: `const refreshWs = new WebSocket(location.origin.replace("https", "wss").replace("http", "ws") + "/websocket-update"); refreshWs.onmessage = () => location.reload();`
             },
             logLevel: "silent",
             watch: {
@@ -87,7 +99,7 @@ export async function serve({ port, pages, noHtmlEntries, extraLoaders, template
                 addEventListener('refresh', caller, { once: true })
                 ws.socket.onclose = () => removeEventListener("refresh", caller);
                 return ws.response;
-            } else return serveDir(r, { quiet: true, fsRoot: "dist", showDirListing: true })
+            } else return serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true })
         }, { port: port ?? 1337 })
     } else {
         const state = await build(config);
@@ -96,11 +108,15 @@ export async function serve({ port, pages, noHtmlEntries, extraLoaders, template
 
 }
 
-function ensureNestedFolderExists(target: string, root: string | undefined) {
+function ensureNestedFolderExists(path: string, root: string) {
+    if (!path.includes("/")) return;
+    const target = path.split("/").filter((_, i, l) => i != l.length - 1).join("/")
+
     for (const folder of target
         .split('/')
         .map((entry, index, list) => (`/${list.filter((_, innerIndex) => innerIndex < index).join("/")}/${entry}`)
             .replace("//", "/") // first element would start with a double slash
-        ))
+        )) {
         ensureDirSync(`${root}${folder}`);
+    }
 }
