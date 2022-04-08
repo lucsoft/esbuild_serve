@@ -1,9 +1,9 @@
-import { build, Loader } from "https://deno.land/x/esbuild@v0.14.27/mod.js";
-import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.129.0/fs/mod.ts";
-import { serveDir } from "https://deno.land/std@0.129.0/http/file_server.ts";
-import { serve as httpServe } from "https://deno.land/std@0.129.0/http/mod.ts";
-import { bgRed, white, green } from "https://deno.land/std@0.129.0/fmt/colors.ts";
-import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.27/mod.js";
+import { build, Loader } from "https://deno.land/x/esbuild@v0.14.34/mod.js";
+import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.134.0/fs/mod.ts";
+import { serveDir } from "https://deno.land/std@0.134.0/http/file_server.ts";
+import { serve as httpServe } from "https://deno.land/std@0.134.0/http/mod.ts";
+import { bgRed, white, green } from "https://deno.land/std@0.134.0/fmt/colors.ts";
+import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.34/mod.js";
 import { httpImports } from "https://deno.land/x/esbuild_plugin_http_imports@v1.2.3/index.ts";
 
 export type serveConfig = {
