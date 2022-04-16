@@ -18,14 +18,19 @@ export type serveConfig = {
     outDir?: string
     assets?: Record<string, string>,
     noHtmlEntries?: Record<string, string>
-    extraLoaders?: Record<string, Loader>
+    extraLoaders?: Record<string, Loader>,
+    external?: string[]
 }
 
-export async function serve({ port, pages, noHtmlEntries, extraLoaders, templateRoot, outDir, assets, preventTemplateRootFallback }: serveConfig) {
+export async function serve({ port, pages, noHtmlEntries, extraLoaders, templateRoot, outDir, assets, preventTemplateRootFallback, external }: serveConfig) {
     const template = templateRoot ?? "templates";
     const outdir = outDir ?? "dist";
     const config: BuildOptions = {
         metafile: true,
+        external: [
+            "*.external.css",
+            ...external ?? []
+        ],
         loader: {
             ".woff": "file",
             ".woff2": "file",
@@ -69,7 +74,7 @@ export async function serve({ port, pages, noHtmlEntries, extraLoaders, template
         },
         outdir: outdir + "/",
         minify: true,
-        splitting: true,
+        splitting: false,
         format: "esm",
         logLevel: "info",
     };
