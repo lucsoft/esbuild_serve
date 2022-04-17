@@ -18,11 +18,12 @@ export type serveConfig = {
     outDir?: string
     assets?: Record<string, string>,
     noHtmlEntries?: Record<string, string>
+    htmlEntries?: string[]
     extraLoaders?: Record<string, Loader>,
     external?: string[]
 }
 
-export async function serve({ port, pages, noHtmlEntries, extraLoaders, templateRoot, outDir, assets, preventTemplateRootFallback, external }: serveConfig) {
+export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoaders, templateRoot, outDir, assets, preventTemplateRootFallback, external }: serveConfig) {
     const template = templateRoot ?? "templates";
     const outdir = outDir ?? "dist";
     const config: BuildOptions = {
@@ -50,7 +51,7 @@ export async function serve({ port, pages, noHtmlEntries, extraLoaders, template
                                 ensureNestedFolderExists(publicPath, outdir);
                                 copySync(privatePath, `${outdir}/${publicPath}`);
                             }
-                        for (const id of Object.keys(pages)) {
+                        for (const id of [ ...Object.keys(pages), ...htmlEntries ?? [] ]) {
                             if (id.endsWith("/")) throw new Error(`${id} is not allowed to end with a slash`);
                             ensureNestedFolderExists(id, outdir);
                             try {
