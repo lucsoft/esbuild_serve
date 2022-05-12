@@ -1,10 +1,11 @@
-import { build, Loader } from "https://deno.land/x/esbuild@v0.14.34/mod.js";
-import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.134.0/fs/mod.ts";
-import { serveDir } from "https://deno.land/std@0.134.0/http/file_server.ts";
-import { serve as httpServe } from "https://deno.land/std@0.134.0/http/mod.ts";
-import { bgRed, white, green } from "https://deno.land/std@0.134.0/fmt/colors.ts";
-import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.34/mod.js";
+import { build, Loader } from "https://deno.land/x/esbuild@v0.14.39/mod.js";
+import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.138.0/fs/mod.ts";
+import { serveDir, serveFile } from "https://deno.land/std@0.138.0/http/file_server.ts";
+import { serve as httpServe } from "https://deno.land/std@0.138.0/http/mod.ts";
+import { bgRed, white, green } from "https://deno.land/std@0.138.0/fmt/colors.ts";
+import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.39/mod.js";
 import { httpImports } from "https://deno.land/x/esbuild_plugin_http_imports@v1.2.3/index.ts";
+import { posix } from "https://deno.land/std@0.138.0/path/mod.ts"
 
 export type serveConfig = {
     /** default 1337 */
@@ -98,14 +99,21 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
             },
         });
         console.log(`📦 First build finished!`);
-        httpServe((r) => {
+        httpServe(async (r) => {
             if (r.url.includes("websocket-update")) {
                 const ws = Deno.upgradeWebSocket(r);
                 const caller = () => ws.socket.send("refresh");
                 addEventListener('refresh', caller, { once: true })
                 ws.socket.onclose = () => removeEventListener("refresh", caller);
                 return ws.response;
-            } else return serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true })
+            } else {
+                try {
+                    Deno.statSync(posix.join(outdir, new URL(r.url).pathname));
+                    return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true })
+                } catch (_) {
+                    return await serveFile(r, posix.join(outdir, new URL(r.url).pathname + ".html"))
+                }
+            }
         }, { port: port ?? 1337 })
     } else {
         const state = await build(config);
