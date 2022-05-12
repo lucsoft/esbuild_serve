@@ -39,6 +39,8 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
             ".html": "file",
             ".svg": "file",
             ".png": "file",
+            ".xml": "file",
+            ".txt": "file",
             ...extraLoaders
         },
         plugins: [
