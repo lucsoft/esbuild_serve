@@ -5,7 +5,8 @@ import { serve as httpServe } from "https://deno.land/std@0.138.0/http/mod.ts";
 import { bgRed, white, green } from "https://deno.land/std@0.138.0/fmt/colors.ts";
 import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.39/mod.js";
 import { httpImports } from "https://deno.land/x/esbuild_plugin_http_imports@v1.2.3/index.ts";
-import { posix } from "https://deno.land/std@0.138.0/path/mod.ts"
+import { posix } from "https://deno.land/std@0.138.0/path/mod.ts";
+import { assert } from "https://deno.land/std@0.138.0/testing/asserts.ts";
 
 export type serveConfig = {
     /** default 1337 */
@@ -110,7 +111,8 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
                 return ws.response;
             } else {
                 try {
-                    Deno.statSync(posix.join(outdir, new URL(r.url).pathname));
+                    if (!r.url.endsWith("/"))
+                        assert(Deno.statSync(posix.join(outdir, new URL(r.url).pathname)).isFile);
                     return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true })
                 } catch (_) {
                     return await serveFile(r, posix.join(outdir, new URL(r.url).pathname + ".html"))
