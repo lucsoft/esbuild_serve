@@ -1,12 +1,13 @@
 import { build, Loader } from "https://deno.land/x/esbuild@v0.14.39/mod.js";
-import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.138.0/fs/mod.ts";
-import { serveDir, serveFile } from "https://deno.land/std@0.138.0/http/file_server.ts";
-import { serve as httpServe } from "https://deno.land/std@0.138.0/http/mod.ts";
-import { bgRed, white, green } from "https://deno.land/std@0.138.0/fmt/colors.ts";
+import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.139.0/fs/mod.ts";
+import { serveDir, serveFile } from "https://deno.land/std@0.139.0/http/file_server.ts";
+import { serve as httpServe, Status, STATUS_TEXT } from "https://deno.land/std@0.139.0/http/mod.ts";
+import { bgRed, white, green } from "https://deno.land/std@0.139.0/fmt/colors.ts";
 import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.39/mod.js";
 import { httpImports } from "https://deno.land/x/esbuild_plugin_http_imports@v1.2.3/index.ts";
-import { posix } from "https://deno.land/std@0.138.0/path/mod.ts";
-import { assert } from "https://deno.land/std@0.138.0/testing/asserts.ts";
+import { posix } from "https://deno.land/std@0.139.0/path/mod.ts";
+import { existsSync } from "https://deno.land/std@0.139.0/fs/mod.ts";
+import { assert } from "https://deno.land/std@0.139.0/testing/asserts.ts";
 
 export type serveConfig = {
     /** default 1337 */
@@ -110,13 +111,18 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
                 ws.socket.onclose = () => removeEventListener("refresh", caller);
                 return ws.response;
             } else {
-                try {
-                    if (!r.url.endsWith("/"))
-                        assert(Deno.statSync(posix.join(outdir, new URL(r.url).pathname)).isFile);
+                // Yes i use existsSync sinc here. you know why? try catch is ugly. yes is ugly. i don't like errors.
+                // And i don't want to invest in a file server that returns the file or null and then crafts a response to that.
+                // Yes its the clean approach but but i think that one ms is not a real concern.
+                const pathCorrect = existsSync(posix.join(outdir, new URL(r.url).pathname));
+                if (pathCorrect)
                     return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true })
-                } catch (_) {
-                    return await serveFile(r, posix.join(outdir, new URL(r.url).pathname + ".html"))
-                }
+                const hasHtml = existsSync(posix.join(outdir, `${new URL(r.url).pathname}.html`));
+                if (hasHtml)
+                    return await serveFile(r, posix.join(outdir, `${new URL(r.url).pathname}.html`))
+                return new Response(STATUS_TEXT.get(Status.NotFound), {
+                    status: Status.NotFound,
+                })
             }
         }, { port: port ?? 1337 })
     } else {
