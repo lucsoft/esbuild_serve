@@ -115,11 +115,11 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
                 // And i don't want to invest in a file server that returns the file or null and then crafts a response to that.
                 // Yes its the clean approach but but i think that one ms is not a real concern.
                 const pathCorrect = existsSync(posix.join(outdir, new URL(r.url).pathname));
-                if (pathCorrect)
-                    return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true })
                 const hasHtml = existsSync(posix.join(outdir, `${new URL(r.url).pathname}.html`));
                 if (hasHtml)
                     return await serveFile(r, posix.join(outdir, `${new URL(r.url).pathname}.html`))
+                if (pathCorrect)
+                    return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true })
                 return new Response(STATUS_TEXT.get(Status.NotFound), {
                     status: Status.NotFound,
                 })
