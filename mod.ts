@@ -4,10 +4,9 @@ import { serveDir, serveFile } from "https://deno.land/std@0.139.0/http/file_ser
 import { serve as httpServe, Status, STATUS_TEXT } from "https://deno.land/std@0.139.0/http/mod.ts";
 import { bgRed, white, green } from "https://deno.land/std@0.139.0/fmt/colors.ts";
 import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.39/mod.js";
-import { httpImports } from "https://deno.land/x/esbuild_plugin_http_imports@v1.2.3/index.ts";
+import { httpImports } from "https://deno.land/x/esbuild_plugin_http_imports@v1.2.4/index.ts";
 import { posix } from "https://deno.land/std@0.139.0/path/mod.ts";
 import { existsSync } from "https://deno.land/std@0.139.0/fs/mod.ts";
-import { assert } from "https://deno.land/std@0.139.0/testing/asserts.ts";
 
 export type serveConfig = {
     /** default 1337 */
