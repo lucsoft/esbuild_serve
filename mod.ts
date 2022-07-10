@@ -10,29 +10,30 @@ import { existsSync } from "https://deno.land/std@0.139.0/fs/mod.ts";
 
 export type serveConfig = {
     /** default 1337 */
-    port?: number
+    port?: number;
     /** automatically provide html templates */
-    pages: Record<string, string>
+    pages: Record<string, string>;
     /** default is `templates` */
-    templateRoot?: string
+    templateRoot?: string;
     /** if a nested page wasn't found nested try use a compatible one in the root folder */
-    preventTemplateRootFallback?: boolean
-    outDir?: string
+    preventTemplateRootFallback?: boolean;
+    outDir?: string;
     assets?: Record<string, string>,
-    noHtmlEntries?: Record<string, string>
-    htmlEntries?: string[]
+    noHtmlEntries?: Record<string, string>;
+    htmlEntries?: string[];
     extraLoaders?: Record<string, Loader>,
-    external?: string[]
-}
+    external?: string[],
+    globals?: Record<string, string>;
+};
 
-export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoaders, templateRoot, outDir, assets, preventTemplateRootFallback, external }: serveConfig) {
-    const template = templateRoot ?? "templates";
-    const outdir = outDir ?? "dist";
+export async function serve(c: serveConfig) {
+    const template = c.templateRoot ?? "templates";
+    const outdir = c.outDir ?? "dist";
     const config: BuildOptions = {
         metafile: true,
         external: [
             "*.external.css",
-            ...external ?? []
+            ...c.external ?? []
         ],
         loader: {
             ".woff": "file",
@@ -42,7 +43,7 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
             ".png": "file",
             ".xml": "file",
             ".txt": "file",
-            ...extraLoaders
+            ...c.extraLoaders
         },
         plugins: [
             {
@@ -50,54 +51,58 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
                 setup(build) {
                     build.onStart(() => {
                         emptyDirSync(outdir);
-                        if (assets)
-                            for (const [ publicPath, privatePath ] of Object.entries(assets)) {
+                        if (c.assets)
+                            for (const [ publicPath, privatePath ] of Object.entries(c.assets)) {
                                 ensureNestedFolderExists(publicPath, outdir);
                                 copySync(privatePath, `${outdir}/${publicPath}`);
                             }
-                        for (const id of [ ...Object.keys(pages), ...htmlEntries ?? [] ]) {
+                        for (const id of [ ...Object.keys(c.pages), ...c.htmlEntries ?? [] ]) {
                             if (id.endsWith("/")) throw new Error(`${id} is not allowed to end with a slash`);
                             ensureNestedFolderExists(id, outdir);
                             try {
                                 copySync(`${template}/${id}.html`, `${outdir}/${id}.html`);
                             } catch {
                                 const fallbackName = id.split("/").at(-1);
-                                if (!preventTemplateRootFallback)
+                                if (!c.preventTemplateRootFallback)
                                     copySync(`${template}/${fallbackName}.html`, `${outdir}/${id}.html`);
                                 else
-                                    console.error(`🥲  Couldn't find template for ${id}`)
+                                    console.error(`🥲  Couldn't find template for ${id}`);
 
                             }
                         }
-                    })
+                    });
                 }
             }, httpImports() ],
         bundle: true,
         entryPoints: {
-            ...pages,
-            ...noHtmlEntries
+            ...c.pages,
+            ...c.noHtmlEntries
         },
         outdir: outdir + "/",
         minify: true,
         splitting: false,
         format: "esm",
         logLevel: "info",
+        banner: {
+            js: Object.entries(c.globals ?? {}).map(([ key, value ]) => `globalThis[${key}]=${JSON.stringify(value)}`).join(";")
+        }
     };
 
     if (Deno.args[ 0 ] == "dev" || Deno.args.length === 0) {
-        console.log(`🚀 ${green("serve")} @ http://localhost:${port ?? 1337}`);
+        console.log(`🚀 ${green("serve")} @ http://localhost:${c.port ?? 1337}`);
         await build({
             ...config, minify: false, splitting: false,
             banner: {
-                js: `const refreshWs = new WebSocket(location.origin.replace("https", "wss").replace("http", "ws") + "/websocket-update"); refreshWs.onmessage = () => location.reload();`
+                ...config.banner,
+                js: config.banner?.js + `;const refreshWs = new WebSocket(location.origin.replace("https", "wss").replace("http", "ws") + "/websocket-update"); refreshWs.onmessage = () => location.reload();`
             },
             logLevel: "silent",
             watch: {
                 onRebuild: (err) => {
                     if (err)
-                        return console.log(`😔 ` + err.message.replaceAll("ERROR:", bgRed(white("ERROR"))))
+                        return console.log(`😔 ` + err.message.replaceAll("ERROR:", bgRed(white("ERROR"))));
                     console.log(`📦 Rebuild finished!`);
-                    dispatchEvent(new Event("refresh"))
+                    dispatchEvent(new Event("refresh"));
                 }
             },
         });
@@ -106,7 +111,7 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
             if (r.url.includes("websocket-update")) {
                 const ws = Deno.upgradeWebSocket(r);
                 const caller = () => ws.socket.send("refresh");
-                addEventListener('refresh', caller, { once: true })
+                addEventListener('refresh', caller, { once: true });
                 ws.socket.onclose = () => removeEventListener("refresh", caller);
                 return ws.response;
             } else {
@@ -116,14 +121,14 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
                 const pathCorrect = existsSync(posix.join(outdir, new URL(r.url).pathname));
                 const hasHtml = existsSync(posix.join(outdir, `${new URL(r.url).pathname}.html`));
                 if (hasHtml)
-                    return await serveFile(r, posix.join(outdir, `${new URL(r.url).pathname}.html`))
+                    return await serveFile(r, posix.join(outdir, `${new URL(r.url).pathname}.html`));
                 if (pathCorrect)
-                    return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true })
+                    return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true });
                 return new Response(STATUS_TEXT.get(Status.NotFound), {
                     status: Status.NotFound,
-                })
+                });
             }
-        }, { port: port ?? 1337 })
+        }, { port: c.port ?? 1337 });
     } else {
         const state = await build(config);
         Deno.exit(state.errors.length > 0 ? 1 : 0);
@@ -133,7 +138,7 @@ export async function serve({ port, pages, htmlEntries, noHtmlEntries, extraLoad
 
 function ensureNestedFolderExists(path: string, root: string) {
     if (!path.includes("/")) return;
-    const target = path.split("/").filter((_, i, l) => i != l.length - 1).join("/")
+    const target = path.split("/").filter((_, i, l) => i != l.length - 1).join("/");
 
     for (const folder of target
         .split('/')
