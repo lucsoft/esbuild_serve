@@ -1,12 +1,12 @@
-import { build, Loader } from "https://deno.land/x/esbuild@v0.14.39/mod.js";
-import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.139.0/fs/mod.ts";
-import { serveDir, serveFile } from "https://deno.land/std@0.139.0/http/file_server.ts";
-import { serve as httpServe, Status, STATUS_TEXT } from "https://deno.land/std@0.139.0/http/mod.ts";
-import { bgRed, white, green } from "https://deno.land/std@0.139.0/fmt/colors.ts";
-import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.39/mod.js";
-import { httpImports } from "https://deno.land/x/esbuild_plugin_http_imports@v1.2.4/index.ts";
-import { posix } from "https://deno.land/std@0.139.0/path/mod.ts";
-import { existsSync } from "https://deno.land/std@0.139.0/fs/mod.ts";
+import { build, Loader } from "https://deno.land/x/esbuild@v0.14.49/mod.js";
+import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.149.0/fs/mod.ts";
+import { serveDir, serveFile } from "https://deno.land/std@0.149.0/http/file_server.ts";
+import { serve as httpServe, Status, STATUS_TEXT } from "https://deno.land/std@0.149.0/http/mod.ts";
+import { bgRed, white, green } from "https://deno.land/std@0.149.0/fmt/colors.ts";
+import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.49/mod.js";
+import { httpImports } from "./esbuild_plugin.ts";
+import { posix } from "https://deno.land/std@0.149.0/path/mod.ts";
+import { existsSync } from "https://deno.land/std@0.149.0/fs/mod.ts";
 
 export type serveConfig = {
     /** default 1337 */
@@ -124,7 +124,7 @@ export async function serve(c: serveConfig) {
                     return await serveFile(r, posix.join(outdir, `${new URL(r.url).pathname}.html`));
                 if (pathCorrect)
                     return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true });
-                return new Response(STATUS_TEXT.get(Status.NotFound), {
+                return new Response(STATUS_TEXT[ Status.NotFound ], {
                     status: Status.NotFound,
                 });
             }
