@@ -1,12 +1,12 @@
-import { build, Loader } from "https://deno.land/x/esbuild@v0.14.49/mod.js";
-import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.149.0/fs/mod.ts";
-import { serveDir, serveFile } from "https://deno.land/std@0.149.0/http/file_server.ts";
-import { serve as httpServe, Status, STATUS_TEXT } from "https://deno.land/std@0.149.0/http/mod.ts";
-import { bgRed, white, green } from "https://deno.land/std@0.149.0/fmt/colors.ts";
-import { BuildOptions } from "https://deno.land/x/esbuild@v0.14.49/mod.js";
+import { build, Loader } from "https://deno.land/x/esbuild@v0.15.5/mod.js";
+import { emptyDirSync, copySync, ensureDirSync } from "https://deno.land/std@0.152.0/fs/mod.ts";
+import { serveDir, serveFile } from "https://deno.land/std@0.152.0/http/file_server.ts";
+import { serve as httpServe, Status, STATUS_TEXT } from "https://deno.land/std@0.152.0/http/mod.ts";
+import { bgRed, white, green } from "https://deno.land/std@0.152.0/fmt/colors.ts";
+import { BuildOptions } from "https://deno.land/x/esbuild@v0.15.5/mod.js";
 import { httpImports } from "./esbuild_plugin.ts";
-import { posix } from "https://deno.land/std@0.149.0/path/mod.ts";
-import { existsSync } from "https://deno.land/std@0.149.0/fs/mod.ts";
+import { posix } from "https://deno.land/std@0.152.0/path/mod.ts";
+import { existsSync } from "https://deno.land/std@0.152.0/fs/mod.ts";
 
 export type serveConfig = {
     /** default 1337 */
@@ -128,7 +128,7 @@ export async function serve(c: serveConfig) {
                     status: Status.NotFound,
                 });
             }
-        }, { port: c.port ?? 1337 });
+        }, { port: c.port ?? 1337, onListen: undefined });
     } else {
         const state = await build(config);
         Deno.exit(state.errors.length > 0 ? 1 : 0);
