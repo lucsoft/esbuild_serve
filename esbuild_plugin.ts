@@ -1,15 +1,18 @@
+import { green } from "https://deno.land/std@0.167.0/fmt/colors.ts";
 import type {
     Loader,
     OnLoadArgs,
     OnLoadResult,
     OnResolveArgs,
     Plugin
-} from "https://deno.land/x/esbuild@v0.15.5/mod.d.ts";
+} from "https://deno.land/x/esbuild@v0.16.5/mod.d.ts";
 
 const namespace = "http-import";
 const possibleLoaders: Loader[] = [ 'js', 'jsx', 'ts', 'tsx', 'css', 'json', 'text', 'base64', 'file', 'dataurl', 'binary', 'default' ];
 const binaryLoaders: Loader[] = [ 'binary', 'file', "dataurl" ];
-const responseCache: { [ path in string ]: Response } = {};
+
+const CACHE = await caches.open("esbuild_serve_0");
+
 export type Options = {
     allowPrivateModules?: boolean;
     defaultToJavascriptIfNothingElseFound?: boolean;
@@ -52,6 +55,7 @@ export const httpImports = (options: Options = {}): Plugin => ({
 
 
 const loadMap = async (url: URL, headers: Headers) => {
+
     const map = await fetch(url.href, { headers });
     const type = map.headers.get("content-type")?.replace(/\s/g, "");
     const buffer = await map.arrayBuffer();
@@ -64,12 +68,17 @@ const loadMap = async (url: URL, headers: Headers) => {
 };
 
 async function useResponseCacheElseLoad(options: Options, path: string, headers: Headers): Promise<Response> {
-    if (responseCache[ path ] && !options.disableCache) {
+    const url = new URL(path);
+    const res = await CACHE.match(url);
+    if (res && !options.disableCache) {
         options.onCacheHit?.(path);
-        return responseCache[ path ];
+        return res;
     }
+    console.log(`🔭 Caching ${green(path)}`);
     options.onCacheMiss?.(path);
-    return responseCache[ path ] = await fetch(path.split("?")[ 0 ], { headers });
+    const newRes = await fetch(path.split("?")[ 0 ], { headers });
+    await CACHE.put(url, newRes.clone());
+    return newRes;
 }
 
 async function handeSourceMaps(contents: string, source: Response, headers: Headers) {
