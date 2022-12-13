@@ -44,7 +44,7 @@ export async function serve(c: serveConfig) {
                         }
                     });
                 }
-            }, httpImports() ],
+            }, httpImports(), ...c.plugins ?? [] ],
         bundle: true,
         entryPoints: {
             ...c.pages,
