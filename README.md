@@ -15,6 +15,7 @@ serve({
     }
 });
 ```
+This will automatically create a HTML Template for you. If you want to have a custom one just place it in `templates/demo/index.html`.
 ### Custom Assets
 Adding plain assets to your build folder goes like this
 ```ts
