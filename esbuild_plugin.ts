@@ -14,6 +14,7 @@ const binaryLoaders: Loader[] = [ 'binary', 'file', "dataurl" ];
 const CACHE = await caches.open("esbuild_serve_0");
 
 export type Options = {
+    sideEffects?: boolean;
     allowPrivateModules?: boolean;
     defaultToJavascriptIfNothingElseFound?: boolean;
     disableCache?: boolean;
@@ -26,7 +27,13 @@ export const httpImports = (options: Options = {}): Plugin => ({
     setup(build) {
         build.onResolve({ filter: /^[^\.]+/ }, ({ path }: OnResolveArgs) => ({ path: import.meta.resolve(path), namespace }));
         build.onResolve({ filter: /^https:\/\// }, ({ path }: OnResolveArgs) => ({ path, namespace }));
-        build.onResolve({ filter: /.*/, namespace }, ({ path, importer }: OnResolveArgs) => ({ path: path.startsWith(".") ? new URL(path.replace(/\?.*/, ""), importer).toString() : import.meta.resolve(path), namespace }));
+        build.onResolve({ filter: /.*/, namespace }, ({ path, importer }: OnResolveArgs) => ({
+            sideEffects: options.sideEffects ?? false,
+            namespace,
+            path: path.startsWith(".")
+                ? new URL(path.replace(/\?.*/, ""), importer).toString()
+                : import.meta.resolve(path),
+        }));
         build.onLoad({ filter: /.*/, namespace }, async ({ path }: OnLoadArgs): Promise<OnLoadResult> => {
             const headers = new Headers();
             if (options.allowPrivateModules) appendAuthHeaderFromPrivateModules(path, headers);

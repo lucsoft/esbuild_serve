@@ -24,6 +24,7 @@ export async function serve(c: serveConfig) {
             ".html": "file",
             ".svg": "file",
             ".png": "file",
+            ".webp": "file",
             ".xml": "file",
             ".txt": "file",
             ...c.extraLoaders
@@ -44,7 +45,7 @@ export async function serve(c: serveConfig) {
                         }
                     });
                 }
-            }, httpImports(), ...c.plugins ?? [] ],
+            }, httpImports({ sideEffects: c.sideEffects }), ...c.plugins ?? [] ],
         bundle: true,
         entryPoints: {
             ...c.pages,
