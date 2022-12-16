@@ -1,6 +1,6 @@
-import { Loader, Plugin } from "https://deno.land/x/esbuild@v0.16.5/mod.js";
+import { Loader, Plugin } from "https://deno.land/x/esbuild@v0.16.7/mod.js";
 
-export type serveConfig = {
+export type ServeConfig = {
     /** default 1337 */
     port?: number;
     /** automatically provide html templates */
