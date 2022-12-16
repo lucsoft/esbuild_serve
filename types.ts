@@ -16,5 +16,6 @@ export type serveConfig = {
     extraLoaders?: Record<string, Loader>,
     external?: string[],
     globals?: Record<string, string>;
+    sideEffects?: boolean;
     plugins?: Plugin[];
 };
