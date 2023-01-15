@@ -25,7 +25,12 @@ export type Options = {
 export const httpImports = (options: Options = {}): Plugin => ({
     name: namespace,
     setup(build) {
-        build.onResolve({ filter: /^[^\.]+/ }, ({ path }: OnResolveArgs) => ({ path: import.meta.resolve(path), namespace }));
+        build.onResolve({ filter: /^[^\.]+/ }, ({ path, importer, namespace: name }: OnResolveArgs) => {
+            // fix for missing baseURL in import.meta.resolve
+            if (name == namespace && path.startsWith("/"))
+                return { path: new URL(path, importer).toString(), namespace };
+            return { path: import.meta.resolve(path), namespace };
+        });
         build.onResolve({ filter: /^https:\/\// }, ({ path }: OnResolveArgs) => ({ path, namespace }));
         build.onResolve({ filter: /.*/, namespace }, ({ path, importer }: OnResolveArgs) => ({
             sideEffects: options.sideEffects ?? false,
