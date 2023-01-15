@@ -1,55 +1,49 @@
-import { existsSync } from "https://deno.land/std@0.168.0/fs/exists.ts";
-import { serveDir, serveFile } from "https://deno.land/std@0.168.0/http/file_server.ts";
-import { Status, STATUS_TEXT } from "https://deno.land/std@0.168.0/http/http_status.ts";
-import { posix } from "https://deno.land/std@0.168.0/path/mod.ts";
 import { ServeConfig } from "../types.ts";
-import { serve as httpServe } from "https://deno.land/std@0.168.0/http/mod.ts";
-import { isLiveReload, liveReloadHookin, returnLiveReload } from "./livereload.ts";
-import { bgRed, green, white } from "https://deno.land/std@0.168.0/fmt/colors.ts";
-import { build, BuildOptions } from "https://deno.land/x/esbuild@v0.16.7/mod.js";
+import { green } from "https://deno.land/std@0.172.0/fmt/colors.ts";
+import * as esbuild from "https://deno.land/x/esbuild@v0.17.0/mod.js";
+import { serve } from "https://deno.land/std@0.172.0/http/server.ts";
 
-export async function returnFileResponse(c: ServeConfig, r: Request) {
-    const outdir = c.outDir ?? "dist";
-
-    // Yes i use existsSync sinc here. you know why? try catch is ugly. yes is ugly. i don't like errors.
-    // And i don't want to invest in a file server that returns the file or null and then crafts a response to that.
-    // Yes its the clean approach but but i think that one ms is not a real concern.
-    const pathCorrect = existsSync(posix.join(outdir, new URL(r.url).pathname));
-    const hasHtml = existsSync(posix.join(outdir, `${new URL(r.url).pathname}.html`));
-    if (hasHtml)
-        return await serveFile(r, posix.join(outdir, `${new URL(r.url).pathname}.html`));
-    if (pathCorrect)
-        return await serveDir(r, { quiet: true, fsRoot: outdir, showDirListing: true });
-    return new Response(STATUS_TEXT[ Status.NotFound ], {
-        status: Status.NotFound,
-    });
-}
-
-export async function startDevServer(commonConfig: BuildOptions, c: ServeConfig) {
+export async function startDevServer(commonConfig: esbuild.BuildOptions, c: ServeConfig) {
     const startTime = performance.now();
     console.log(`🚀 ${green("serve")} @ http://localhost:${c.port ?? 1337}`);
-    await build({
+    const context = await esbuild.context({
         ...commonConfig,
+        plugins: [
+            ...commonConfig.plugins ?? []
+        ],
         minify: false,
         splitting: false,
-        banner: {
-            ...commonConfig.banner,
-            js: commonConfig.banner?.js + liveReloadHookin
-        },
-        logLevel: "silent",
-        watch: {
-            onRebuild: (err) => {
-                if (err)
-                    return console.log(`😔 ` + err.message.replaceAll("ERROR:", bgRed(white("ERROR"))));
-                console.log(`📦 Rebuild finished!`);
-                dispatchEvent(new Event("refresh"));
-            }
-        },
+        logLevel: "silent"
     });
-    console.log(`📦 Started in ${green(`${(performance.now() - startTime).toFixed(2)}ms`)}`);
-    httpServe((r) => {
-        if (isLiveReload(r)) return returnLiveReload(r);
 
-        return returnFileResponse(c, r);
-    }, { port: c.port ?? 1337, onListen: undefined });
+    // Enable watch mode
+    await context.watch();
+
+    // Enable serve mode
+    const { host, port } = await context.serve({
+        servedir: c.outDir ?? "dist"
+    });
+
+    // We are creating a proxy so we can have custom routing.
+    await serve(async (e) => {
+        // proxy everything to internal esbuild dev server;
+        const url = new URL(e.url);
+        url.host = host;
+        url.port = port.toString();
+
+        const rsp = await fetch(url);
+
+        // esbuild doesn't automaticly append .html so we do it here
+        if (!rsp.ok) {
+            url.pathname += ".html";
+            return await fetch(url);
+        }
+
+        return rsp;
+    }, {
+        port: c.port ?? 1337,
+        onListen: () => {
+            console.log(`📦 Started in ${green(`${(performance.now() - startTime).toFixed(2)}ms`)}`);
+        }
+    });
 }
