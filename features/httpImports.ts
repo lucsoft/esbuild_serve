@@ -16,7 +16,6 @@ const CACHE = await caches.open("esbuild_serve_0");
 export type Options = {
     sideEffects?: boolean;
     allowPrivateModules?: boolean;
-    defaultToJavascriptIfNothingElseFound?: boolean;
     disableCache?: boolean;
     onCacheMiss?: (path: string) => void;
     onCacheHit?: (path: string) => void;
@@ -49,17 +48,26 @@ export const httpImports = (options: Options = {}): Plugin => ({
             contents = await handeSourceMaps(contents, source, headers);
             const { pathname } = new URL(path);
 
-            // Find perfect Loader for extension
-            const loader = build.initialOptions.loader?.[ `.${pathname.split(".").at(-1)}` ] ?? (pathname.match(/[^.]+$/)?.[ 0 ]) as (Loader | undefined);
+            const loaderFromContentType = {
+                "application/typescript": <Loader>"ts",
+                "application/javascript": <Loader>"js"
+            }[ source.headers.get("content-type")?.split(";").at(0) ?? "" ] ?? undefined;
+
+            const predefinedLoader = build.initialOptions.loader?.[ `.${pathname.split(".").at(-1)}` ];
+
+            const guessLoader = (pathname.match(/[^.]+$/)?.[ 0 ]) as (Loader | undefined);
+
+            // Choose Loader.
+            const loader = predefinedLoader
+                ?? loaderFromContentType
+                ?? (possibleLoaders.includes(guessLoader!) ? guessLoader : undefined)
+                ?? "file";
+
             return {
                 contents: binaryLoaders.includes(loader ?? "default")
                     ? new Uint8Array(await source.clone().arrayBuffer())
                     : contents,
-                loader: options.defaultToJavascriptIfNothingElseFound
-                    ? (loader && possibleLoaders.includes(loader)
-                        ? loader
-                        : "js")
-                    : loader
+                loader
             };
         });
     }
