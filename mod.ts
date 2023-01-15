@@ -16,6 +16,7 @@ export async function serve(c: ServeConfig) {
         loader: {
             ".woff": "file",
             ".woff2": "file",
+            ".ttf": "file",
             ".html": "file",
             ".svg": "file",
             ".png": "file",
