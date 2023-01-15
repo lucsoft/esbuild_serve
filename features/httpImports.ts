@@ -75,7 +75,6 @@ export const httpImports = (options: Options = {}): Plugin => ({
 
 
 const loadMap = async (url: URL, headers: Headers) => {
-
     const map = await fetch(url.href, { headers });
     const type = map.headers.get("content-type")?.replace(/\s/g, "");
     const buffer = await map.arrayBuffer();
@@ -96,8 +95,9 @@ async function useResponseCacheElseLoad(options: Options, path: string, headers:
     }
     console.log(`🔭 Caching ${green(path)}`);
     options.onCacheMiss?.(path);
-    const newRes = await fetch(path.split("?")[ 0 ], { headers });
-    await CACHE.put(url, newRes.clone());
+    const newRes = await fetch(path, { headers });
+    if (newRes.ok)
+        await CACHE.put(url, newRes.clone());
     return newRes;
 }
 
