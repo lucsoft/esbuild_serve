@@ -33,8 +33,12 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
 
         const rsp = await fetch(url);
 
+        // We can't disable the file directory page
+        const text = await rsp.clone().text();
+        const isFileDirectoryPage = text.includes(`<title>Directory: ${url.pathname}/</title>`) && text.includes("📁");
+
         // esbuild doesn't automaticly append .html so we do it here
-        if (!rsp.ok) {
+        if (!rsp.ok || isFileDirectoryPage) {
             url.pathname += ".html";
             return await fetch(url);
         }
