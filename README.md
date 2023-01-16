@@ -49,4 +49,4 @@ As simple as starting deno with the args `deno run -A serve.ts build`
 
 ## Note 
 
-- Since v1.2.0 live reload is fully done be esbuild (since 0.17) and the dev server is based opon esbuild (with custom routing added on top)
+- Since v1.2.0 live reload is fully done by esbuild (since 0.17) and the dev server is based opon esbuild (with custom routing added on top)
