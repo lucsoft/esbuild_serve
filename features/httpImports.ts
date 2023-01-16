@@ -44,8 +44,8 @@ export const httpImports = (options: Options = {}): Plugin => ({
 
             const source = await useResponseCacheElseLoad(options, path, headers);
             if (!source.ok) throw new Error(`GET ${path} failed: status ${source.status}`);
-            let contents = await source.clone().text();
-            contents = await handeSourceMaps(contents, source, headers);
+            const contents = await source.clone().text();
+            // contents = await handeSourceMaps(contents, source, headers);
             const { pathname } = new URL(path);
 
             const loaderFromContentType = {
