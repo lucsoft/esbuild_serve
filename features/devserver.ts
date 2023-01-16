@@ -2,7 +2,8 @@ import { ServeConfig } from "../types.ts";
 import { green } from "https://deno.land/std@0.172.0/fmt/colors.ts";
 import * as esbuild from "https://deno.land/x/esbuild@v0.17.0/mod.js";
 import { serve } from "https://deno.land/std@0.172.0/http/server.ts";
-
+// polyfill until EventSource is ready from deno.
+import { EventSource } from "https://deno.land/x/eventsource@v0.0.3/mod.ts";
 export async function startDevServer(commonConfig: esbuild.BuildOptions, c: ServeConfig) {
     const startTime = performance.now();
     console.log(`🚀 ${green("serve")} @ http://localhost:${c.port ?? 1337}`);
@@ -11,9 +12,12 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         plugins: [
             ...commonConfig.plugins ?? []
         ],
+        banner: {
+            'js': `new EventSource('/esbuild').addEventListener('change', () => location.reload());` + commonConfig.banner?.js
+        },
         minify: false,
         splitting: false,
-        logLevel: "silent"
+        logLevel: "error"
     });
 
     // Enable watch mode
@@ -24,6 +28,12 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         servedir: c.outDir ?? "dist"
     });
 
+    const changes = new EventSource("http://" + host + ":" + port + "/esbuild");
+
+    changes.onmessage = () => console.log(`📦 Rebuild finished!`);
+
+    await context.rebuild();
+
     // We are creating a proxy so we can have custom routing.
     await serve(async (e) => {
         // proxy everything to internal esbuild dev server;
@@ -31,6 +41,9 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         url.host = host;
         url.port = port.toString();
 
+        if (url.pathname == "/esbuild") {
+            return Response.redirect(url);
+        }
         const rsp = await fetch(url);
 
         // We can't disable the file directory page
