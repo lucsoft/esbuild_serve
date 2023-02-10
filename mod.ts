@@ -1,4 +1,4 @@
-import { build, BuildOptions } from "https://deno.land/x/esbuild@v0.17.0/mod.js";
+import { build, BuildOptions } from "https://deno.land/x/esbuild@v0.17.7/mod.js";
 import { ServeConfig } from "./types.ts";
 import { autoTemplates } from "./features/templates.ts";
 import { httpImports } from "./features/httpImports.ts";
@@ -30,7 +30,9 @@ export async function serve(c: ServeConfig) {
             httpImports({ sideEffects: c.sideEffects }),
             ...c.plugins ?? []
         ],
+        inject: [ ...c.poylfills ?? [], ...c.shims ?? [] ],
         bundle: true,
+        define: c.globals,
         entryPoints: {
             ...c.pages,
             ...c.noHtmlEntries
@@ -40,9 +42,6 @@ export async function serve(c: ServeConfig) {
         splitting: false,
         format: "esm",
         logLevel: "info",
-        banner: {
-            js: Object.entries(c.globals ?? {}).map(([ key, value ]) => `globalThis[${key}]=${JSON.stringify(value)}`).join(";")
-        }
     };
     if (Deno.args[ 0 ] == "dev" || Deno.args.length === 0) {
         await startDevServer(config, c);

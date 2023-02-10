@@ -1,13 +1,13 @@
-import { green } from "https://deno.land/std@0.172.0/fmt/colors.ts";
+import { green } from "https://deno.land/std@0.177.0/fmt/colors.ts";
 import type {
     Loader,
     OnLoadArgs,
     OnLoadResult,
     OnResolveArgs,
     Plugin
-} from "https://deno.land/x/esbuild@v0.17.0/mod.d.ts";
+} from "https://deno.land/x/esbuild@v0.17.7/mod.d.ts";
 
-const namespace = "http-import";
+const namespace = "esbuild_serve:http-import";
 const possibleLoaders: Loader[] = [ 'js', 'jsx', 'ts', 'tsx', 'css', 'json', 'text', 'base64', 'file', 'dataurl', 'binary', 'default' ];
 const binaryLoaders: Loader[] = [ 'binary', 'file', "dataurl" ];
 

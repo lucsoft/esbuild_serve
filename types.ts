@@ -1,4 +1,4 @@
-import { Loader, Plugin } from "https://deno.land/x/esbuild@v0.17.0/mod.js";
+import { Loader, Plugin } from "https://deno.land/x/esbuild@v0.17.7/mod.js";
 
 export type ServeConfig = {
     /** default 1337 */
@@ -15,7 +15,29 @@ export type ServeConfig = {
     htmlEntries?: string[];
     extraLoaders?: Record<string, Loader>,
     external?: string[],
+
+    /**
+     * Define Global KeyValues.
+     *
+     * `globals: { "ENV": "development"}`
+     *
+     * turn into `globalThis.ENV == development`
+     */
     globals?: Record<string, string>;
+
     sideEffects?: boolean;
+
+    /**
+     * Append Plugins to the default plugins
+     */
     plugins?: Plugin[];
+
+    /**
+     * Add polyfills to your entrypoints
+     *
+     * Should be URLs
+     */
+    poylfills?: string[];
+    shims?: string[];
+
 };

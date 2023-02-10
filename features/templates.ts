@@ -1,6 +1,6 @@
-import { copySync } from "https://deno.land/std@0.172.0/fs/copy.ts";
-import { emptyDirSync } from "https://deno.land/std@0.172.0/fs/empty_dir.ts";
-import { Plugin } from "https://deno.land/x/esbuild@v0.17.0/mod.js";
+import { copySync } from "https://deno.land/std@0.177.0/fs/copy.ts";
+import { emptyDirSync } from "https://deno.land/std@0.177.0/fs/empty_dir.ts";
+import { Plugin } from "https://deno.land/x/esbuild@v0.17.7/mod.js";
 import { ServeConfig } from "../types.ts";
 import { ensureNestedFolderExists } from "./filesystem.ts";
 

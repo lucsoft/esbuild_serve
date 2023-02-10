@@ -1,7 +1,7 @@
 import { ServeConfig } from "../types.ts";
-import { green } from "https://deno.land/std@0.172.0/fmt/colors.ts";
-import * as esbuild from "https://deno.land/x/esbuild@v0.17.0/mod.js";
-import { serve } from "https://deno.land/std@0.172.0/http/server.ts";
+import { green } from "https://deno.land/std@0.177.0/fmt/colors.ts";
+import * as esbuild from "https://deno.land/x/esbuild@v0.17.7/mod.js";
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 // polyfill until EventSource is ready from deno.
 import { EventSource } from "https://deno.land/x/eventsource@v0.0.3/mod.ts";
 export async function startDevServer(commonConfig: esbuild.BuildOptions, c: ServeConfig) {
@@ -9,13 +9,11 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
     console.log(`🚀 ${green("serve")} @ http://localhost:${c.port ?? 1337}`);
     const context = await esbuild.context({
         ...commonConfig,
-        plugins: [
-            ...commonConfig.plugins ?? []
-        ],
-        banner: {
-            'js': `new EventSource('/esbuild').addEventListener('change', () => location.reload());` + commonConfig.banner?.js
-        },
         minify: false,
+        banner: {
+            ...commonConfig.banner ?? {},
+            js: (commonConfig.banner?.[ "js" ] || '') + `new EventSource(new URL("/esbuild",location.href).toString()).addEventListener('change', () => location.reload());`
+        },
         splitting: false,
         logLevel: "error"
     });
