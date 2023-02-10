@@ -49,7 +49,7 @@ As simple as starting deno with the args `deno run -A serve.ts build`
 
 ## Spicing your Builds
 
-1. Define globalThis varliables
+1. Define globalThis variables
     ```ts
     serve({
         globals: {
