@@ -22,11 +22,11 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
     await context.watch();
 
     // Enable serve mode
-    const { host, port } = await context.serve({
+    const { port } = await context.serve({
         servedir: c.outDir ?? "dist"
     });
 
-    const changes = new EventSource("http://" + host + ":" + port + "/esbuild");
+    const changes = new EventSource("http://localhost:" + port + "/esbuild");
 
     changes.onmessage = () => console.log(`📦 Rebuild finished!`);
 
@@ -36,7 +36,6 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
     await serve(async (e) => {
         // proxy everything to internal esbuild dev server;
         const url = new URL(e.url);
-        url.host = host;
         url.port = port.toString();
 
         if (url.pathname == "/esbuild") {
