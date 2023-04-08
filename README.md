@@ -1,10 +1,13 @@
 # esbuild_serve
+
 Live Reload. Persistent HTTP Import Resolution. Templates. Dev Server. Polyfills. A Deno Web bundler.
 
 ## Get denoing 🦕🔨
 
 ### Pages
+
 Pages are a simple way to get going fast.
+
 ```ts
 import { serve } from "https://deno.land/x/esbuild_serve/mod.ts";
 
@@ -16,8 +19,11 @@ serve({
 });
 ```
 This will automatically create a HTML Template for you. If you want to have a custom one just place it in `templates/demo/index.html`.
+
 ### Custom Assets
+
 Adding plain assets to your build folder goes like this
+
 ```ts
 import { serve } from "https://deno.land/x/esbuild_serve/mod.ts";
 
@@ -28,8 +34,11 @@ serve({
     }
 })
 ```
+
 ### Custom Templates
+
 If you have have a setup like this: `serve({ pages: { "/document/page/index": "index.ts" } })`
+
 ```
 Resoultion will be like this:
 /templates/document/page/index.html
@@ -50,6 +59,7 @@ As simple as starting deno with the args `deno run -A serve.ts build`
 ## Spicing your Builds
 
 1. Define globalThis variables
+
     ```ts
     serve({
         globals: {
@@ -59,7 +69,9 @@ As simple as starting deno with the args `deno run -A serve.ts build`
         }
     })
     ```
+
 2. Adding Polyfills
+
     ```ts
     serve({
         polyfills: [
@@ -72,3 +84,26 @@ As simple as starting deno with the args `deno run -A serve.ts build`
 ## Note
 
 - Since v1.2.0 live reload is fully done by esbuild (since 0.17) and the dev server is based opon esbuild (with custom routing added on top)
+
+## Internal Plugins
+
+Only want templates or http imports? just import them!
+
+```ts
+import { build } from "https://deno.land/x/esbuild/mod.js";
+import { autoTemplates } from "https://deno.land/x/esbuild_serve/features/templates.ts";
+import { httpImports } from "https://deno.land/x/esbuild_serve/features/httpImports.ts";
+build({
+    entryPoints: {
+        app: "app.ts"
+    },
+    plugins: [
+        autoTemplates({
+            pages: {
+                "app": "./app.ts"
+            }
+        }),
+        httpImports({ sideEffects: false }),
+    ]
+})
+```
