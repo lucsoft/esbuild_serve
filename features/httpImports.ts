@@ -10,7 +10,7 @@ import type {
 const namespace = "esbuild_serve:http-import";
 const possibleLoaders: Loader[] = [ 'js', 'jsx', 'ts', 'tsx', 'css', 'json', 'text', 'base64', 'file', 'dataurl', 'binary', 'default' ];
 const binaryLoaders: Loader[] = [ 'binary', 'file', "dataurl" ];
-
+import { fromFileUrl } from "https://deno.land/std@0.185.0/path/mod.ts";
 const CACHE = await caches.open("esbuild_serve_0");
 
 export type Options = {
@@ -28,7 +28,13 @@ export const httpImports = (options: Options = {}): Plugin => ({
             // fix for missing baseURL in import.meta.resolve
             if (name == namespace && path.startsWith("/"))
                 return { path: new URL(path, importer).toString(), namespace };
-            return { path: import.meta.resolve(path), namespace };
+
+            if (import.meta.resolve(path).startsWith("file:"))
+                return { path: fromFileUrl(import.meta.resolve(path)) };
+            // return { path: new URL(path, importer).toString(), namespace };
+
+            const resolve = import.meta.resolve(path);
+            return { path: resolve, namespace };
         });
         build.onResolve({ filter: /^https:\/\// }, ({ path }: OnResolveArgs) => ({ path, namespace }));
         build.onResolve({ filter: /.*/, namespace }, ({ path, importer }: OnResolveArgs) => ({
@@ -41,7 +47,6 @@ export const httpImports = (options: Options = {}): Plugin => ({
         build.onLoad({ filter: /.*/, namespace }, async ({ path }: OnLoadArgs): Promise<OnLoadResult> => {
             const headers = new Headers();
             if (options.allowPrivateModules) appendAuthHeaderFromPrivateModules(path, headers);
-
             const source = await useResponseCacheElseLoad(options, path, headers);
             if (!source.ok) throw new Error(`GET ${path} failed: status ${source.status}`);
             const contents = await source.clone().text();
