@@ -45,6 +45,7 @@ export const httpImports = (options: Options = {}): Plugin => ({
                 : import.meta.resolve(path),
         }));
         build.onLoad({ filter: /.*/, namespace }, async ({ path }: OnLoadArgs): Promise<OnLoadResult> => {
+            if (path.startsWith("data:")) return { contents: path, loader: "base64" };
             const headers = new Headers();
             if (options.allowPrivateModules) appendAuthHeaderFromPrivateModules(path, headers);
             const source = await useResponseCacheElseLoad(options, path, headers);
