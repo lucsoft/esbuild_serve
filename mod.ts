@@ -1,4 +1,4 @@
-import { build, BuildOptions } from "https://deno.land/x/esbuild@v0.17.15/mod.js";
+import { build, BuildOptions } from "https://deno.land/x/esbuild@v0.17.19/mod.js";
 import { ServeConfig } from "./types.ts";
 import { autoTemplates } from "./features/templates.ts";
 import { httpImports } from "./features/httpImports.ts";
