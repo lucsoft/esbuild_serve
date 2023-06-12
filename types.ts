@@ -42,5 +42,5 @@ export type ServeConfig = {
     /**
      * Defaults to a simple css & js loader
      */
-    defaultTemplate?: (name: string) => string;
+    defaultTemplate?: (name: string, path: string) => string;
 };
