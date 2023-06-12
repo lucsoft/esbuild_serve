@@ -7,7 +7,7 @@ export type ServeConfig = {
     pages: Record<string, string>;
     /** default is `templates` */
     templateRoot?: string;
-    /** if a nested page wasn't found nested try use a compatible one in the root folder */
+    /** if a nested page wasn't found nested try use a key-equal one in the root folder */
     preventTemplateRootFallback?: boolean;
     outDir?: string;
     assets?: Record<string, string>,
@@ -39,5 +39,8 @@ export type ServeConfig = {
      */
     poylfills?: string[];
     shims?: string[];
-
+    /**
+     * Defaults to a simple css & js loader
+     */
+    defaultTemplate?: (name: string) => string;
 };

@@ -11,12 +11,18 @@ const namespace = "esbuild_serve:http-import";
 const possibleLoaders: Loader[] = [ 'js', 'jsx', 'ts', 'tsx', 'css', 'json', 'text', 'base64', 'file', 'dataurl', 'binary', 'default' ];
 const binaryLoaders: Loader[] = [ 'binary', 'file', "dataurl" ];
 import { fromFileUrl } from "https://deno.land/std@0.188.0/path/mod.ts";
-const CACHE = await caches.open("esbuild_serve_0");
+let CACHE = await caches.open("esbuild_serve_0");
+
+export async function reload() {
+    await caches.delete("esbuild_serve_0");
+    CACHE = await caches.open("esbuild_serve_0");
+}
 
 export type Options = {
     sideEffects?: boolean;
     allowPrivateModules?: boolean;
     disableCache?: boolean;
+    reloadOnCachedError?: boolean;
     onCacheMiss?: (path: string) => void;
     onCacheHit?: (path: string) => void;
 };
