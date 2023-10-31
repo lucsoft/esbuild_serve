@@ -46,16 +46,19 @@ export async function serve(c: ServeConfig) {
 
     const [ first, second ] = Deno.args;
 
-    if (second == "--reload" || first == "--reload")
+    const noExit = Deno.env.has("NO_EXIT");
+
+    const production = Deno.env.has("BUILD") || first === "build";
+    const shouldReload = Deno.env.has("RELOAD") || second === "--reload" || first === "--reload";
+
+    if (shouldReload)
         await reload();
 
-    if ([ "dev", "--reload", undefined ].includes(first)) {
-        await startDevServer(config, c);
-    } else if (first == "build") {
+    if (production) {
         const state = await build(config);
-        Deno.exit(state.errors.length > 0 ? 1 : 0);
+        if (!noExit)
+            Deno.exit(state.errors.length > 0 ? 1 : 0);
     } else {
-        console.log("🤠 Unkown Argument. Excepted dev or build. (default is dev)");
-        Deno.exit(1);
+        await startDevServer(config, c);
     }
 }
