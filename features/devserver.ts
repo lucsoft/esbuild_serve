@@ -1,7 +1,7 @@
 import { ServeConfig } from "../types.ts";
-import { green } from "https://deno.land/std@0.206.0/fmt/colors.ts";
+import { green } from "https://deno.land/std@0.207.0/fmt/colors.ts";
 import * as esbuild from "https://deno.land/x/esbuild@v0.19.4/mod.js";
-import { serve } from "https://deno.land/std@0.206.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.207.0/http/server.ts";
 // polyfill until EventSource is ready from deno.
 import { EventSource } from "https://deno.land/x/eventsource@v0.0.3/mod.ts";
 export async function startDevServer(commonConfig: esbuild.BuildOptions, c: ServeConfig) {
