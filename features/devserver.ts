@@ -1,7 +1,11 @@
+import { green } from "https://deno.land/std@0.210.0/fmt/colors.ts";
+import {
+    ServerSentEventStream,
+    type ServerSentEventMessage,
+} from "https://deno.land/std@0.210.0/http/server_sent_event_stream.ts";
+import * as esbuild from "https://deno.land/x/esbuild@v0.19.10/mod.js";
 import { ServeConfig } from "../types.ts";
-import { green } from "https://deno.land/std@0.209.0/fmt/colors.ts";
-import * as esbuild from "https://deno.land/x/esbuild@v0.19.9/mod.js";
-import { serve } from "https://deno.land/std@0.209.0/http/server.ts";
+
 // polyfill until EventSource is ready from deno.
 import { EventSource } from "https://deno.land/x/eventsource@v0.0.3/mod.ts";
 export async function startDevServer(commonConfig: esbuild.BuildOptions, c: ServeConfig) {
@@ -12,7 +16,7 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         minify: false,
         banner: {
             ...commonConfig.banner ?? {},
-            js: (commonConfig.banner?.[ "js" ] || '') + `new EventSource(new URL("/esbuild",location.href).toString()).addEventListener('change', () => location.reload());`
+            js: (commonConfig.banner?.[ "js" ] || '') + `;new EventSource(new URL("/esbuild",location.href).toString()).addEventListener('message', () => location?.reload?.());`
         },
         splitting: false,
         logLevel: "error"
@@ -33,13 +37,37 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
     await context.rebuild();
 
     // We are creating a proxy so we can have custom routing.
-    await serve(async (e) => {
+    Deno.serve({
+        port: c.port ?? 1337,
+        onListen: () => {
+            console.log(`📦 Started in ${green(`${(performance.now() - startTime).toFixed(2)}ms`)}`);
+        }
+    }, async (e) => {
         // proxy everything to internal esbuild dev server;
         const url = new URL(e.url);
         url.port = port.toString();
 
         if (url.pathname == "/esbuild") {
-            return Response.redirect(url);
+            const { readable, writable } = new TransformStream<ServerSentEventMessage, ServerSentEventMessage>();
+
+            const changes = new EventSource("http://localhost:" + port + "/esbuild");
+
+            changes.onmessage = async () => {
+                try {
+                    const writer = writable.getWriter();
+                    await writer.write({ data: "change" });
+                    writer.releaseLock();
+                } catch (_) {
+                    //
+                }
+            };
+
+            return new Response(readable.pipeThrough(new ServerSentEventStream()), {
+                headers: {
+                    "content-type": "text/event-stream",
+                    "cache-control": "no-cache",
+                },
+            });
         }
         const rsp = await fetch(url);
 
@@ -54,10 +82,5 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         }
 
         return rsp;
-    }, {
-        port: c.port ?? 1337,
-        onListen: () => {
-            console.log(`📦 Started in ${green(`${(performance.now() - startTime).toFixed(2)}ms`)}`);
-        }
     });
 }
