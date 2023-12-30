@@ -1,6 +1,6 @@
 import { copySync } from "https://deno.land/std@0.210.0/fs/copy.ts";
 import { emptyDirSync } from "https://deno.land/std@0.210.0/fs/empty_dir.ts";
-import { Plugin } from "https://deno.land/x/esbuild@v0.19.10/mod.js";
+import { Plugin } from "https://deno.land/x/esbuild@v0.19.11/mod.js";
 import { ensureNestedFolderExists } from "./filesystem.ts";
 import { assert } from "https://deno.land/std@0.210.0/assert/mod.ts";
 

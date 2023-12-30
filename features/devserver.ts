@@ -3,7 +3,7 @@ import {
     ServerSentEventStream,
     type ServerSentEventMessage,
 } from "https://deno.land/std@0.210.0/http/server_sent_event_stream.ts";
-import * as esbuild from "https://deno.land/x/esbuild@v0.19.10/mod.js";
+import * as esbuild from "https://deno.land/x/esbuild@v0.19.11/mod.js";
 import { ServeConfig } from "../types.ts";
 
 // polyfill until EventSource is ready from deno.
