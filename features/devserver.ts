@@ -1,8 +1,8 @@
-import { green } from "https://deno.land/std@0.210.0/fmt/colors.ts";
+import { green } from "https://deno.land/std@0.211.0/fmt/colors.ts";
 import {
     ServerSentEventStream,
     type ServerSentEventMessage,
-} from "https://deno.land/std@0.210.0/http/server_sent_event_stream.ts";
+} from "https://deno.land/std@0.211.0/http/server_sent_event_stream.ts";
 import * as esbuild from "https://deno.land/x/esbuild@v0.19.11/mod.js";
 import { ServeConfig } from "../types.ts";
 
