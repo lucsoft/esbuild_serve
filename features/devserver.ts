@@ -6,8 +6,6 @@ import {
 import * as esbuild from "https://deno.land/x/esbuild@v0.19.12/mod.js";
 import { ServeConfig } from "../types.ts";
 
-// polyfill until EventSource is ready from deno.
-import { EventSource } from "https://deno.land/x/eventsource@v0.0.3/mod.ts";
 export async function startDevServer(commonConfig: esbuild.BuildOptions, c: ServeConfig) {
     const startTime = performance.now();
     console.log(`🚀 ${green("serve")} @ http://localhost:${c.port ?? 1337}`);
@@ -16,7 +14,7 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         minify: false,
         banner: {
             ...commonConfig.banner ?? {},
-            js: (commonConfig.banner?.[ "js" ] || '') + `;new EventSource(new URL("/esbuild",location.href).toString()).addEventListener('message', () => location?.reload?.());`
+            js: `${commonConfig.banner?.js || ''};new EventSource(new URL("/esbuild",location.href).toString()).addEventListener('message', () => location?.reload?.());`
         },
         splitting: false,
         logLevel: "error"
@@ -30,7 +28,7 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         servedir: c.outDir ?? "dist"
     });
 
-    const changes = new EventSource("http://localhost:" + port + "/esbuild");
+    const changes = new EventSource(`http://localhost:${port}/esbuild`);
 
     changes.onmessage = () => console.log(`📦 Rebuild finished!`);
 
@@ -50,7 +48,7 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         if (url.pathname == "/esbuild") {
             const { readable, writable } = new TransformStream<ServerSentEventMessage, ServerSentEventMessage>();
 
-            const changes = new EventSource("http://localhost:" + port + "/esbuild");
+            const changes = new EventSource(`http://localhost:${port}/esbuild`);
 
             changes.onmessage = async () => {
                 try {
