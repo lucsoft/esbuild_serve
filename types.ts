@@ -1,4 +1,4 @@
-import { Loader, Plugin } from "https://deno.land/x/esbuild@v0.20.0/mod.js";
+import { Loader, Plugin } from "https://deno.land/x/esbuild@v0.20.1/mod.js";
 
 export type ServeConfig = {
     /** default 1337 */
