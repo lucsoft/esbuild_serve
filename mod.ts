@@ -7,6 +7,12 @@ import { startDevServer } from "./features/devserver.ts";
 export async function serve(c: ServeConfig) {
     const outdir = c.outDir ?? "dist";
 
+    const [ first, second ] = Deno.args;
+
+    const noExit = Deno.env.has("NO_EXIT");
+    const shouldReload = Deno.env.has("RELOAD") || second === "--reload" || first === "--reload";
+    const production = Deno.env.has("BUILD") || first === "build";
+
     const config: BuildOptions = {
         metafile: true,
         external: [
@@ -39,17 +45,11 @@ export async function serve(c: ServeConfig) {
         },
         outdir: outdir + "/",
         minify: true,
-        splitting: false,
+        splitting: Deno.env.has("CHUNKS") && production,
         format: "esm",
         logLevel: "info",
+        chunkNames: "chunks/[name]-[hash]"
     };
-
-    const [ first, second ] = Deno.args;
-
-    const noExit = Deno.env.has("NO_EXIT");
-
-    const production = Deno.env.has("BUILD") || first === "build";
-    const shouldReload = Deno.env.has("RELOAD") || second === "--reload" || first === "--reload";
 
     if (shouldReload)
         await reload();

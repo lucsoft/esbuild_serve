@@ -3,8 +3,12 @@ import {
     ServerSentEventStream,
     type ServerSentEventMessage,
 } from "https://deno.land/std@0.218.2/http/server_sent_event_stream.ts";
+// @deno-types="https://deno.land/x/esbuild@v0.20.1/mod.d.ts"
 import * as esbuild from "https://deno.land/x/esbuild@v0.20.1/mod.js";
 import { ServeConfig } from "../types.ts";
+
+import { EventSource } from "https://deno.land/x/eventsource@v0.0.3/mod.ts";
+
 
 export async function startDevServer(commonConfig: esbuild.BuildOptions, c: ServeConfig) {
     const startTime = performance.now();
@@ -14,10 +18,13 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         minify: false,
         banner: {
             ...commonConfig.banner ?? {},
-            js: `${commonConfig.banner?.js || ''};new EventSource(new URL("/esbuild",location.href).toString()).addEventListener('message', () => location?.reload?.());`
+            js: `${commonConfig.banner?.js || ''};new EventSource("/esbuild").addEventListener('change', () => window?.location?.reload?.());`
         },
         splitting: false,
-        logLevel: "error"
+        outdir: c.outDir ?? "dist",
+        logLevel: "error",
+        write: false,
+        sourcemap: true
     });
 
     // Enable watch mode
@@ -25,14 +32,26 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
 
     // Enable serve mode
     const { port } = await context.serve({
-        servedir: c.outDir ?? "dist"
+        servedir: c.outDir ?? "dist",
     });
 
+    const triggers = <(() => void)[]>[];
+
     const changes = new EventSource(`http://localhost:${port}/esbuild`);
+    let hadChanges = false;
 
-    changes.onmessage = () => console.log(`📦 Rebuild finished!`);
+    changes.addEventListener('change', (e) => {
+        if (!hadChanges) {
 
-    await context.rebuild();
+            hadChanges = true;
+            return;
+        }
+        console.log(JSON.parse((<MessageEvent>e).data));
+        console.log(`📦 Rebuild finished!`);
+        triggers.forEach(() => {
+            triggers.pop()?.();
+        });
+    });
 
     // We are creating a proxy so we can have custom routing.
     Deno.serve({
@@ -48,17 +67,16 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         if (url.pathname == "/esbuild") {
             const { readable, writable } = new TransformStream<ServerSentEventMessage, ServerSentEventMessage>();
 
-            const changes = new EventSource(`http://localhost:${port}/esbuild`);
-
-            changes.onmessage = async () => {
+            triggers.push(async () => {
                 try {
                     const writer = writable.getWriter();
-                    await writer.write({ data: "change" });
+                    await writer.write({ event: "change", data: "change" });
                     writer.releaseLock();
-                } catch (_) {
+
+                } catch {
                     //
                 }
-            };
+            });
 
             return new Response(readable.pipeThrough(new ServerSentEventStream()), {
                 headers: {
