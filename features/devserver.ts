@@ -23,7 +23,7 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
         splitting: false,
         outdir: c.outDir ?? "dist",
         logLevel: "error",
-        write: false,
+        write: true,
         sourcemap: true
     });
 
