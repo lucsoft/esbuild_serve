@@ -46,7 +46,6 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
             hadChanges = true;
             return;
         }
-        console.log(JSON.parse((<MessageEvent>e).data));
         console.log(`📦 Rebuild finished!`);
         triggers.forEach(() => {
             triggers.pop()?.();
