@@ -3,6 +3,7 @@ import { ServeConfig } from "./types.ts";
 import { autoTemplates } from "./features/templates.ts";
 import { httpImports, reload } from "./features/httpImports.ts";
 import { startDevServer } from "./features/devserver.ts";
+import { jsrRemapping } from "./features/jsrRemapping.ts";
 
 export async function serve(c: ServeConfig) {
     const outdir = c.outDir ?? "dist";
@@ -33,6 +34,7 @@ export async function serve(c: ServeConfig) {
         },
         plugins: [
             autoTemplates(c),
+            jsrRemapping(),
             httpImports({ sideEffects: c.sideEffects }),
             ...c.plugins ?? []
         ],
