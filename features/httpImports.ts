@@ -32,7 +32,7 @@ export type Options = {
 export function remapPathBasedOnSettings(options: Options, path: string): string {
 
     if (!options.preventRemapOfJSR && path.startsWith("jsr:")) {
-        return `https://esm.sh/jsr/${path.replace(/^jsr:/, "")}`;
+        return `https://esm.sh/jsr/${path.replace(/^jsr:\/?/, "")}`;
     }
 
     return path;
