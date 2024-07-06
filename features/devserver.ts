@@ -40,7 +40,7 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
     const changes = new EventSource(`http://localhost:${port}/esbuild`);
     let hadChanges = false;
 
-    changes.addEventListener('change', (e) => {
+    changes.addEventListener('change', () => {
         if (!hadChanges) {
 
             hadChanges = true;

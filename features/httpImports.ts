@@ -96,19 +96,6 @@ export const httpImports = (options: Options = {}): Plugin => ({
     }
 });
 
-
-const loadMap = async (url: URL, headers: Headers) => {
-    const map = await fetch(url.href, { headers });
-    const type = map.headers.get("content-type")?.replace(/\s/g, "");
-    const buffer = await map.arrayBuffer();
-    const blob = new Blob([ buffer ], { type });
-    const reader = new FileReader();
-    return new Promise((cb) => {
-        reader.onload = (e) => cb(e.target?.result);
-        reader.readAsDataURL(blob);
-    });
-};
-
 async function useResponseCacheElseLoad(options: Options, path: string, headers: Headers): Promise<Response> {
     const url = new URL(path);
     const res = await CACHE.match(url);
@@ -122,18 +109,6 @@ async function useResponseCacheElseLoad(options: Options, path: string, headers:
     if (newRes.ok)
         await CACHE.put(url, newRes.clone());
     return newRes;
-}
-
-async function handeSourceMaps(contents: string, source: Response, headers: Headers) {
-    const pattern = /\/\/# sourceMappingURL=(\S+)/;
-    const match = contents.match(pattern);
-    if (match) {
-        const url = new URL(match[ 1 ], source.url);
-        const dataurl = await loadMap(url, headers);
-        const comment = `//# sourceMappingURL=${dataurl}`;
-        return contents.replace(pattern, comment);
-    }
-    return contents;
 }
 
 function appendAuthHeaderFromPrivateModules(path: string, headers: Headers) {
