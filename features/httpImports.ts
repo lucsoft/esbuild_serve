@@ -11,6 +11,7 @@ const namespace = "esbuild_serve:http-import";
 const possibleLoaders: Loader[] = [ 'js', 'jsx', 'ts', 'tsx', 'css', 'json', 'text', 'base64', 'file', 'dataurl', 'binary', 'default' ];
 const binaryLoaders: Loader[] = [ 'binary', 'file', "dataurl" ];
 import { fromFileUrl } from "https://deno.land/std@0.224.0/path/mod.ts";
+
 let CACHE = await caches.open("esbuild_serve_0");
 
 export async function reload() {
@@ -25,6 +26,16 @@ export type Options = {
     reloadOnCachedError?: boolean;
     onCacheMiss?: (path: string) => void;
     onCacheHit?: (path: string) => void;
+    preventRemapOfJSR?: boolean;
+};
+
+export function remapPathBasedOnSettings(options: Options, path: string): string {
+
+    if (!options.preventRemapOfJSR && path.startsWith("jsr:")) {
+        return `https://esm.sh/jsr/${path.replace(/^jsr:/, "")}`;
+    }
+
+    return path;
 };
 
 export const httpImports = (options: Options = {}): Plugin => ({
@@ -39,7 +50,7 @@ export const httpImports = (options: Options = {}): Plugin => ({
                 return { path: fromFileUrl(import.meta.resolve(path)) };
             // return { path: new URL(path, importer).toString(), namespace };
 
-            const resolve = import.meta.resolve(path);
+            const resolve = remapPathBasedOnSettings(options, import.meta.resolve(remapPathBasedOnSettings(options, path)));
             return { path: resolve, namespace };
         });
         build.onResolve({ filter: /^https:\/\// }, ({ path }: OnResolveArgs) => ({ path, namespace }));
