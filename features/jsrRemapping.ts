@@ -1,4 +1,4 @@
-import { Plugin } from "https://deno.land/x/esbuild@v0.20.1/mod.js";
+import { Plugin } from "https://deno.land/x/esbuild@v0.23.0/mod.js";
 
 const namespace = "esbuild_serve:jsrRemapping";
 
