@@ -31,6 +31,11 @@ export async function serve(c: ServeConfig) {
             ".txt": "file",
             ...c.extraLoaders
         },
+        tsconfigRaw: {
+            compilerOptions: {
+                experimentalDecorators: true
+            }
+        },
         plugins: [
             autoTemplates(c),
             httpImports({ sideEffects: c.sideEffects }),
