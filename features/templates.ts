@@ -1,8 +1,7 @@
-import { copySync } from "https://deno.land/std@0.224.0/fs/copy.ts";
-import { emptyDirSync } from "https://deno.land/std@0.224.0/fs/empty_dir.ts";
-import { Plugin } from "https://deno.land/x/esbuild@v0.23.0/mod.js";
+import { copySync, emptyDirSync } from "jsr:@std/fs@1.0.5";
+import { Plugin } from "https://deno.land/x/esbuild@v0.24.0/mod.js";
 import { ensureNestedFolderExists } from "./filesystem.ts";
-import { assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assert } from "jsr:@std/assert@1.0.6";
 
 export function provideTemplate(id: string, outdir: string, template: string, c: TemplateConfig) {
     if (id.endsWith("/"))
