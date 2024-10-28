@@ -1,4 +1,4 @@
-import { ensureDirSync } from "https://deno.land/std@0.224.0/fs/ensure_dir.ts";
+import { ensureDirSync } from "jsr:@std/fs@1.0.5";
 
 export function ensureNestedFolderExists(path: string, root: string) {
     if (!path.includes("/")) return;

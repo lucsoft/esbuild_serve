@@ -1,4 +1,4 @@
-import { build, BuildOptions } from "https://deno.land/x/esbuild@v0.23.0/mod.js";
+import { build, BuildOptions } from "https://deno.land/x/esbuild@v0.24.0/mod.js";
 import { ServeConfig } from "./types.ts";
 import { autoTemplates } from "./features/templates.ts";
 import { httpImports, reload } from "./features/httpImports.ts";
@@ -48,7 +48,7 @@ export async function serve(c: ServeConfig) {
             ...c.pages,
             ...c.noHtmlEntries
         },
-        outdir: outdir + "/",
+        outdir: `${outdir}/`,
         minify: true,
         splitting: Deno.env.has("CHUNKS") && production,
         format: "esm",

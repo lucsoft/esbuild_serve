@@ -1,19 +1,15 @@
-import { green } from "https://deno.land/std@0.224.0/fmt/colors.ts";
+import { green } from "jsr:@std/fmt@1.0.3/colors";
 import {
     ServerSentEventStream,
     type ServerSentEventMessage,
-} from "https://deno.land/std@0.224.0/http/server_sent_event_stream.ts";
-// @deno-types="https://deno.land/x/esbuild@v0.23.0/mod.d.ts"
-import * as esbuild from "https://deno.land/x/esbuild@v0.23.0/mod.js";
+} from "jsr:@std/http@1.0.9";
+import { context, type BuildOptions } from "https://deno.land/x/esbuild@v0.24.0/mod.js";
 import { ServeConfig } from "../types.ts";
 
-import { EventSource } from "https://deno.land/x/eventsource@v0.0.3/mod.ts";
-
-
-export async function startDevServer(commonConfig: esbuild.BuildOptions, c: ServeConfig) {
+export async function startDevServer(commonConfig: BuildOptions, c: ServeConfig) {
     const startTime = performance.now();
     console.log(`🚀 ${green("serve")} @ http://localhost:${c.port ?? 1337}`);
-    const context = await esbuild.context({
+    const ctx = await context({
         ...commonConfig,
         minify: false,
         banner: {
@@ -28,10 +24,10 @@ export async function startDevServer(commonConfig: esbuild.BuildOptions, c: Serv
     });
 
     // Enable watch mode
-    await context.watch();
+    await ctx.watch();
 
     // Enable serve mode
-    const { port } = await context.serve({
+    const { port } = await ctx.serve({
         servedir: c.outDir ?? "dist",
     });
 
