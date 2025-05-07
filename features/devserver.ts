@@ -3,7 +3,7 @@ import {
     ServerSentEventStream,
     type ServerSentEventMessage,
 } from "jsr:@std/http@1.0.9";
-import { context, type BuildOptions } from "https://deno.land/x/esbuild@v0.25.3/mod.js";
+import { context, type BuildOptions } from "https://deno.land/x/esbuild@v0.25.4/mod.js";
 import { ServeConfig } from "../types.ts";
 
 export async function startDevServer(commonConfig: BuildOptions, c: ServeConfig) {
