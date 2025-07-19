@@ -5,7 +5,7 @@ import type {
     OnLoadResult,
     OnResolveArgs,
     Plugin
-} from "https://deno.land/x/esbuild@v0.25.6/mod.d.ts";
+} from "https://deno.land/x/esbuild@v0.25.7/mod.d.ts";
 
 const namespace = "esbuild_serve:http-import";
 const possibleLoaders: Loader[] = [ 'js', 'jsx', 'ts', 'tsx', 'css', 'json', 'text', 'base64', 'file', 'dataurl', 'binary', 'default' ];
