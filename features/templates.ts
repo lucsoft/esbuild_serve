@@ -1,5 +1,5 @@
 import { copySync, emptyDirSync } from "jsr:@std/fs@1.0.5";
-import { Plugin } from "https://deno.land/x/esbuild@v0.25.8/mod.js";
+import { Plugin } from "https://deno.land/x/esbuild@v0.25.9/mod.js";
 import { ensureNestedFolderExists } from "./filesystem.ts";
 import { assert } from "jsr:@std/assert@1.0.6";
 
